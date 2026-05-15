@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwnerByUserIdField() {
+      return isSignedIn() && request.auth.uid == resource.data.userId;
+    }
+
+    function isOwnerOnCreateByUserIdField() {
+      return isSignedIn() && request.auth.uid == request.resource.data.userId;
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update, delete: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /reminders/{reminderId} {
+      allow create: if isOwnerOnCreateByUserIdField();
+      allow read, delete: if isOwnerByUserIdField();
+      allow update: if isOwnerByUserIdField() && request.resource.data.userId == resource.data.userId;
+    }
+
+    match /searchHistory/{searchId} {
+      allow create: if isOwnerOnCreateByUserIdField();
+      allow read, delete: if isOwnerByUserIdField();
+      allow update: if isOwnerByUserIdField() && request.resource.data.userId == resource.data.userId;
+    }
+
+    match /medicineHistory/{historyId} {
+      allow create: if isOwnerOnCreateByUserIdField();
+      allow read, delete: if isOwnerByUserIdField();
+      allow update: if isOwnerByUserIdField() && request.resource.data.userId == resource.data.userId;
+    }
+
+    match /folders/{folderId} {
+      allow create: if isOwnerOnCreateByUserIdField();
+      allow read, delete: if isOwnerByUserIdField();
+      allow update: if isOwnerByUserIdField() && request.resource.data.userId == resource.data.userId;
+    }
+
+    match /savedMedicines/{savedId} {
+      allow create: if isOwnerOnCreateByUserIdField();
+      allow read, delete: if isOwnerByUserIdField();
+      allow update: if isOwnerByUserIdField() && request.resource.data.userId == resource.data.userId;
+    }
+  }
+}
